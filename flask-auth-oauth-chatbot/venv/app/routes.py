@@ -3,6 +3,11 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.urls import url_parse
 from app import db
 from app.models import User
+from app.models import DataUpload # Import the new model
+from app.forms import TabularUploadForm, TextUploadForm, TextFileUploadForm # Import forms
+from app.services import process_tabular_upload, process_text_upload # Import services
+from werkzeug.utils import secure_filename # For securing filenames
+import os
 
 bp = Blueprint('main', __name__)
 
@@ -103,3 +108,75 @@ def connect():
     return render_template('connect.html', title='Connect Accounts',
                            google_connected=google_connected,
                            microsoft_connected=microsoft_connected)
+
+@bp.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload_data():
+    tabular_form = TabularUploadForm(prefix='tabular') # Use prefixes for distinct forms
+    text_form = TextUploadForm(prefix='text')
+    text_file_form = TextFileUploadForm(prefix='text_file')
+
+    # Determine which form was submitted based on the submit button's name attribute
+    if tabular_form.validate_on_submit() and tabular_form.submit.data:
+        file = tabular_form.file.data
+        dataset_name = tabular_form.dataset_name.data
+        # Secure the filename before using it (though we mainly use dataset_name)
+        filename = secure_filename(file.filename)
+
+        # Call the service function to process the file
+        # Note: This is synchronous. For large files, use Celery task.
+        success, message, upload_id = process_tabular_upload(file, current_user.id, dataset_name)
+        if success:
+            flash(message, 'success')
+        else:
+            flash(message, 'danger')
+        return redirect(url_for('main.list_uploads')) # Redirect to upload list or back to upload page
+
+    if text_form.validate_on_submit() and text_form.submit.data:
+        text_content = text_form.text_content.data
+        document_name = text_form.document_name.data
+
+        # Call the service function
+        # Note: Synchronous processing. Use Celery for large texts.
+        success, message, upload_id = process_text_upload(text_content, current_user.id, document_name)
+        if success:
+            flash(message, 'success')
+        else:
+            flash(message, 'danger')
+        return redirect(url_for('main.list_uploads'))
+
+    if text_file_form.validate_on_submit() and text_file_form.submit.data:
+        file = text_file_form.file.data
+        document_name = text_file_form.document_name.data
+        filename = secure_filename(file.filename) # Secure filename
+
+        try:
+            # Read text content from uploaded file
+            text_content = file.read().decode('utf-8') # Assume UTF-8 encoding
+            file.close() # Close the file handle
+
+            # Call the service function
+            success, message, upload_id = process_text_upload(text_content, current_user.id, document_name or filename)
+            if success:
+                flash(message, 'success')
+            else:
+                flash(message, 'danger')
+        except Exception as e:
+            flash(f"Error reading text file '{filename}': {e}", 'danger')
+
+        return redirect(url_for('main.list_uploads'))
+
+
+    # Render the page with all forms
+    return render_template('upload.html', title='Upload Data',
+                           tabular_form=tabular_form,
+                           text_form=text_form,
+                           text_file_form=text_file_form)
+
+
+@bp.route('/uploads')
+@login_required
+def list_uploads():
+    """Displays a list of data uploads for the current user."""
+    uploads = DataUpload.query.filter_by(user_id=current_user.id).order_by(DataUpload.created_at.desc()).all()
+    return render_template('list_uploads.html', title='My Uploads', uploads=uploads)

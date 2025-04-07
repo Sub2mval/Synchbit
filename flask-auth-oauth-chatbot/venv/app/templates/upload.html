@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %} {# Optional: For cleaner form rendering #}
+
+{% block content %}
+<h2>Upload Your Data</h2>
+<p>Upload tabular data (CSV) to be stored in the database, or text data to be processed and stored for semantic search.</p>
+
+<div class="row">
+    {# Tabular Upload Form #}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">Upload Tabular Data (CSV)</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.upload_data') }}" enctype="multipart/form-data">
+                     {{ tabular_form.hidden_tag() }} {# CSRF token #}
+                    <div class="mb-3">
+                         {{ render_field(tabular_form.dataset_name, class="form-control") }}
+                    </div>
+                     <div class="mb-3">
+                         {{ render_field(tabular_form.file, class="form-control") }}
+                     </div>
+                    {{ tabular_form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# Text Paste Form #}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">Upload Text Data (Paste)</div>
+            <div class="card-body">
+                 <form method="POST" action="{{ url_for('main.upload_data') }}">
+                     {{ text_form.hidden_tag() }} {# CSRF token #}
+                     <div class="mb-3">
+                          {{ render_field(text_form.document_name, class="form-control") }}
+                     </div>
+                      <div class="mb-3">
+                          {{ render_field(text_form.text_content, class="form-control", rows=8) }}
+                     </div>
+                     {{ text_form.submit(class="btn btn-secondary") }}
+                 </form>
+            </div>
+        </div>
+         {# Text File Upload Form #}
+         <div class="card mt-3">
+            <div class="card-header">Upload Text Data (File)</div>
+            <div class="card-body">
+                 <form method="POST" action="{{ url_for('main.upload_data') }}" enctype="multipart/form-data">
+                     {{ text_file_form.hidden_tag() }} {# CSRF token #}
+                     <div class="mb-3">
+                          {{ render_field(text_file_form.document_name, class="form-control") }}
+                     </div>
+                      <div class="mb-3">
+                          {{ render_field(text_file_form.file, class="form-control") }}
+                     </div>
+                     {{ text_file_form.submit(class="btn btn-info") }}
+                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+<p><a href="{{ url_for('main.list_uploads') }}">View My Uploads</a></p>
+
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>My Data Uploads</h2>
+
+{% if uploads %}
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name / Source</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Uploaded At</th>
+            <th>Details</th>
+            <th>Storage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for upload in uploads %}
+        <tr>
+            <td>{{ upload.id }}</td>
+            <td>{{ upload.filename }}</td>
+            <td><span class="badge bg-{{ 'primary' if upload.data_type == 'tabular' else 'secondary' }}">{{ upload.data_type }}</span></td>
+            <td>
+                <span class="badge bg-{% if upload.status == 'completed' %}success{% elif upload.status == 'failed' %}danger{% elif upload.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                    {{ upload.status }}
+                </span>
+            </td>
+            <td>{{ upload.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+            <td>
+                {% if upload.data_type == 'tabular' and upload.row_count is not none %}
+                    {{ upload.row_count }} rows
+                {% elif upload.data_type == 'text' and upload.vector_count is not none %}
+                    {{ upload.vector_count }} vectors
+                {% elif upload.status == 'failed' %}
+                     <small class="text-danger" title="{{ upload.error_message }}">Error</small>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+             <td>
+                <small>{{ upload.storage_location }}</small>
+             </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>You haven't uploaded any data yet.</p>
+{% endif %}
+
+<p><a href="{{ url_for('main.upload_data') }}" class="btn btn-success mt-3">Upload More Data</a></p>
+{% endblock %}
