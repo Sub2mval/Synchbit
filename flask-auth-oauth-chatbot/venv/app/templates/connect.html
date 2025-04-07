@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Connect External Accounts</h2>
+    <p>Connect your Google or Microsoft account to enable email features.</p>
+
+    <div class="list-group">
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+                <i class="bi bi-google"></i> Google Account
+                {% if google_connected %}
+                    <span class="badge bg-success ms-2">Connected</span>
+                     <!-- Optional: Display connected email -->
+                     <!-- <small class="text-muted ms-2">({{ current_user.oauth_credentials.filter_by(provider='google').first().provider_user_email }})</small> -->
+                {% endif %}
+            </span>
+            {% if not google_connected %}
+                <a href="{{ url_for('google.login') }}" class="btn btn-danger btn-sm">Connect Google</a>
+            {% else %}
+                {# Optional: Add disconnect functionality later #}
+                <!-- <a href="{{ url_for('main.disconnect_oauth', provider='google') }}" class="btn btn-warning btn-sm">Disconnect</a> -->
+                 <button class="btn btn-secondary btn-sm" disabled>Connected</button>
+            {% endif %}
+        </div>
+
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+             <span>
+                <i class="bi bi-microsoft"></i> Microsoft Account (Outlook)
+                 {% if microsoft_connected %}
+                    <span class="badge bg-success ms-2">Connected</span>
+                    <!-- Optional: Display connected email -->
+                    <!-- <small class="text-muted ms-2">({{ current_user.oauth_credentials.filter_by(provider='microsoft').first().provider_user_email }})</small> -->
+                {% endif %}
+             </span>
+            {% if not microsoft_connected %}
+                <a href="{{ url_for('microsoft.login') }}" class="btn btn-primary btn-sm">Connect Microsoft</a>
+            {% else %}
+                 {# Optional: Add disconnect functionality later #}
+                 <!-- <a href="{{ url_for('main.disconnect_oauth', provider='microsoft') }}" class="btn btn-warning btn-sm">Disconnect</a> -->
+                 <button class="btn btn-secondary btn-sm" disabled>Connected</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <p class="mt-4"><a href="{{ url_for('main.chatbot') }}">Back to Chatbot</a></p>
+
+{% endblock %}

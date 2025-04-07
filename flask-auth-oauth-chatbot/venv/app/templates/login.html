@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Sign In</h2>
+    <form method="POST" action="{{ url_for('main.login') }}">
+        {{ form.hidden_tag() if form }} {# Add if using Flask-WTF later #}
+        <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+            <label class="form-check-label" for="remember_me">Remember me</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+    <p class="mt-3">
+        New User? <a href="{{ url_for('main.signup') }}">Click to Sign Up!</a>
+    </p>
+     <hr>
+     <p>Or log in using:</p>
+     {# Login links trigger Flask-Dance flows #}
+     <a href="{{ url_for('google.login') }}" class="btn btn-danger mb-2"> <i class="bi bi-google"></i> Login with Google</a> <br>
+     <a href="{{ url_for('microsoft.login') }}" class="btn btn-primary mb-2"> <i class="bi bi-microsoft"></i> Login with Microsoft</a>
+     {# Note: These links initiate LOGIN via OAuth. The connect page initiates LINKING #}
+{% endblock %}
