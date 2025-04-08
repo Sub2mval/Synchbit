@@ -1,0 +1,4 @@
+{
+    "builds": [{"src": "flask-auth-oauth-chatbot/venv/wsgi.py", "use": "@vercel/python"}],
+    "routes": [{"src": "flask-auth-oauth-chatbot/venv/(.*)", "dest": "flask-auth-oauth-chatbot/venv/wsgi.py"}]
+}
