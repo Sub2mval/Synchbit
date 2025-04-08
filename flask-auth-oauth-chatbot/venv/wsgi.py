@@ -6,3 +6,5 @@ from app import create_app
 app = create_app()
 
 # You generally don't need app.run() here; the WSGI server (like Gunicorn, used by Vercel) handles it.
+if __name__ == "__main__":
+    app.run()
