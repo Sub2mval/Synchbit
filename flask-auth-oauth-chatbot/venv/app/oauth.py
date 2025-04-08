@@ -1,7 +1,7 @@
 from flask import flash, url_for, redirect
 from flask_login import current_user, login_required
 from flask_dance.contrib.google import make_google_blueprint, google # Provides 'google' proxy object
-from flask_dance.contrib.microsoft import make_microsoft_blueprint, microsoft # Provides 'microsoft' proxy object
+#from flask_dance.contrib.microsoft import make_microsoft_blueprint, microsoft # Provides 'microsoft' proxy object
 from flask_dance.consumer import oauth_authorized, oauth_error
 from sqlalchemy.orm.exc import NoResultFound
 from app import db
@@ -29,19 +29,19 @@ blueprint = make_google_blueprint(
 # --- Microsoft OAuth Blueprint ---
 # Scopes for Microsoft Graph API (Outlook/Microsoft 365)
 # Common scopes: openid, email, profile, User.Read. For Mail: Mail.ReadWrite, Mail.Send
-microsoft_blueprint = make_microsoft_blueprint(
-    scope=[
-        "openid",
-        "email",
-        "profile",
-        "User.Read", # Basic profile read
-        "offline_access", # Request refresh token
-        # Add Mail scopes later IF needed:
-        # "Mail.ReadWrite",
-        # "Mail.Send",
-    ],
-    redirect_to="main.connect" # Redirect back after auth
-)
+# microsoft_blueprint = make_microsoft_blueprint(
+#     scope=[
+#         "openid",
+#         "email",
+#         "profile",
+#         "User.Read", # Basic profile read
+#         "offline_access", # Request refresh token
+#         # Add Mail scopes later IF needed:
+#         # "Mail.ReadWrite",
+#         # "Mail.Send",
+#     ],
+#     redirect_to="main.connect" # Redirect back after auth
+# )
 
 
 # --- Signal Handlers for Successful OAuth ---
@@ -90,44 +90,44 @@ def google_logged_in(blpr, token):
     return False # Prevent Flask-Dance's default redirect
 
 
-@oauth_authorized.connect_via(microsoft_blueprint) # Catches signal from microsoft blueprint
-@login_required
-def microsoft_logged_in(blpr, token):
-    if not token:
-        flash("Failed to log in with Microsoft.", "danger")
-        return redirect(url_for("main.connect"))
+# @oauth_authorized.connect_via(microsoft_blueprint) # Catches signal from microsoft blueprint
+# @login_required
+# def microsoft_logged_in(blpr, token):
+#     if not token:
+#         flash("Failed to log in with Microsoft.", "danger")
+#         return redirect(url_for("main.connect"))
 
-    # Use the token to get user info from Microsoft Graph API
-    # Ensure you requested 'User.Read' scope
-    resp = microsoft.get("/v1.0/me") # Microsoft Graph endpoint for user info
-    if not resp.ok:
-        msg = "Failed to fetch user info from Microsoft."
-        flash(msg, "danger")
-        return redirect(url_for("main.connect"))
+#     # Use the token to get user info from Microsoft Graph API
+#     # Ensure you requested 'User.Read' scope
+#     resp = microsoft.get("/v1.0/me") # Microsoft Graph endpoint for user info
+#     if not resp.ok:
+#         msg = "Failed to fetch user info from Microsoft."
+#         flash(msg, "danger")
+#         return redirect(url_for("main.connect"))
 
-    ms_info = resp.json()
-    ms_user_id = ms_info["id"]
-    # Email might be in 'mail' or 'userPrincipalName'
-    ms_email = ms_info.get("mail") or ms_info.get("userPrincipalName")
+#     ms_info = resp.json()
+#     ms_user_id = ms_info["id"]
+#     # Email might be in 'mail' or 'userPrincipalName'
+#     ms_email = ms_info.get("mail") or ms_info.get("userPrincipalName")
 
-    try:
-        # Check if this MS account is already linked to *another* user
-        existing_oauth = OAuth.query.filter_by(provider=blpr.name, provider_user_id=ms_user_id).first()
-        if existing_oauth and existing_oauth.user_id != current_user.id:
-             flash(f"This Microsoft account is already linked to a different user ({existing_oauth.user.email}). Please use a different Microsoft account or log in as that user.", "danger")
-             return redirect(url_for("main.connect"))
+#     try:
+#         # Check if this MS account is already linked to *another* user
+#         existing_oauth = OAuth.query.filter_by(provider=blpr.name, provider_user_id=ms_user_id).first()
+#         if existing_oauth and existing_oauth.user_id != current_user.id:
+#              flash(f"This Microsoft account is already linked to a different user ({existing_oauth.user.email}). Please use a different Microsoft account or log in as that user.", "danger")
+#              return redirect(url_for("main.connect"))
 
-        oauth = OAuth.query.filter_by(provider=blpr.name, user_id=current_user.id).one()
-    except NoResultFound:
-        oauth = OAuth(provider=blpr.name, user_id=current_user.id, token=token, provider_user_id=ms_user_id, provider_user_email=ms_email)
-        db.session.add(oauth)
-    else:
-        oauth.token = token
-        oauth.provider_user_email = ms_email
+#         oauth = OAuth.query.filter_by(provider=blpr.name, user_id=current_user.id).one()
+#     except NoResultFound:
+#         oauth = OAuth(provider=blpr.name, user_id=current_user.id, token=token, provider_user_id=ms_user_id, provider_user_email=ms_email)
+#         db.session.add(oauth)
+#     else:
+#         oauth.token = token
+#         oauth.provider_user_email = ms_email
 
-    db.session.commit()
-    flash("Successfully connected your Microsoft account!", "success")
-    return False # Prevent default redirect
+#     db.session.commit()
+#     flash("Successfully connected your Microsoft account!", "success")
+#     return False # Prevent default redirect
 
 
 # --- Optional: Signal Handler for OAuth Errors ---

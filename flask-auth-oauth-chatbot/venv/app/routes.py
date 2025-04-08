@@ -108,10 +108,10 @@ def chatbot():
 def connect():
     # Page showing buttons to connect Google/Microsoft accounts
     google_connected = current_user.oauth_credentials.filter_by(provider='google').first() is not None
-    microsoft_connected = current_user.oauth_credentials.filter_by(provider='microsoft').first() is not None
+    #microsoft_connected = current_user.oauth_credentials.filter_by(provider='microsoft').first() is not None
     return render_template('connect.html', title='Connect Accounts',
-                           google_connected=google_connected,
-                           microsoft_connected=microsoft_connected)
+                           google_connected=google_connected)#,
+                           #microsoft_connected=microsoft_connected)
 
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required

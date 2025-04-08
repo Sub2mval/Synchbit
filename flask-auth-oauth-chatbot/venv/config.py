@@ -12,8 +12,8 @@ EMBEDDING_DIMENSION = 384 # Set according to the model above
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-should-really-change-this'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'instance', 'app.db')
+    #SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    #    'sqlite:///' + os.path.join(basedir, 'instance', 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Ensure instance folder exists
@@ -50,4 +50,4 @@ class Config:
     # Optional: File Upload Configuration
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Example: Limit uploads to 16MB
     UPLOAD_EXTENSIONS_TABULAR = ['.csv']
-    UPLOAD_EXTENSIONS_TEXT = ['.txt', '.md'] # Add other text formats if needed
+    UPLOAD_EXTENSIONS_TEXT = ['.txt', '.md', '.pdf', '.docx'] # Add other text formats if needed

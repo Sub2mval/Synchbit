@@ -4,10 +4,10 @@ import os
 import json
 from typing import TypedDict, Annotated, List, Dict, Any, Optional, Set
 from langgraph.graph import StateGraph, END, START
-from langgraph.checkpoint.sqlite import SqliteSaver # Or another checkpointer (Postgres?)
+from langgraph.checkpoint.postgres import PostgresSaver # Or another checkpointer (Postgres?)
 from langgraph.prebuilt import tools_condition, ToolNode
 
-from langchain_openai import ChatOpenAI
+from langchain_together import ChatTogether
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, BaseMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.tools import Tool, tool # Use the decorator for simplicity
@@ -21,11 +21,11 @@ from sqlalchemy import create_engine, inspect as sql_inspect # To get schema
 from sqlalchemy.exc import ProgrammingError
 
 # --- Configuration ---
-LLM_MODEL_NAME = "gpt-4o-mini" # Or your preferred model
+LLM_MODEL_NAME = "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free" # Or your preferred model
 # Consider a separate checkpointer DB if using SQLite isn't ideal for Vercel/production
 # memory = SqliteSaver.from_conn_string("langgraph_checkpoints.sqlite")
 # For simplicity now, use in-memory (won't persist approvals across restarts!)
-memory = SqliteSaver.from_conn_string(":memory:")
+memory = PostgresSaver.from_conn_string(":memory:")
 
 
 # --- Agent State ---
@@ -290,7 +290,7 @@ def propose_sql_write_tool(target_upload_id: int, write_request: str, state: Age
         ),
         HumanMessage(content=f"User request for Upload ID {target_upload_id}: {write_request}")
     ])
-    llm = ChatOpenAI(model=LLM_MODEL_NAME, temperature=0.0) # Low temp for precision
+    llm = ChatTogether(model=LLM_MODEL_NAME, temperature=0.0) # Low temp for precision
     chain = sql_generation_prompt | llm
     response = chain.invoke({})
     generated_sql = response.content.strip()
@@ -411,7 +411,7 @@ def agent_router(state: AgentState):
          return "generate_response"
 
     # Use function calling / tool calling LLM
-    llm_with_tools = ChatOpenAI(model=LLM_MODEL_NAME, temperature=0).bind_tools(available_tools)
+    llm_with_tools = ChatTogether(model=LLM_MODEL_NAME, temperature=0).bind_tools(available_tools)
 
     # Construct prompt with available tools description if needed, or rely on bind_tools
     # system_message = f"You are a helpful assistant. Access data using the available tools based on the user query and conversation history. Available data types: {state['available_data_types']}"
@@ -536,7 +536,7 @@ def generate_final_response(state: AgentState):
          final_prompt = ChatPromptTemplate.from_messages([SystemMessage(content=system_message)])
 
 
-    llm = ChatOpenAI(model=LLM_MODEL_NAME, temperature=0.7)
+    llm = ChatTogether(model=LLM_MODEL_NAME, temperature=0.7)
     # Combine context prompt with existing history
     messages_for_llm = final_prompt.format_messages() + state['chat_history']
 
